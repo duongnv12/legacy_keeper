@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "300221867879",
+    "project_id": "legacy-keeper-88d55",
+    "storage_bucket": "legacy-keeper-88d55.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:300221867879:android:a2db6370b6fe1f3b89b1c2",
+        "android_client_info": {
+          "package_name": "com.example.legacy_keeper"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOVGYNO31jPlAJXoihE5ExDB9-6H3FqX8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
