@@ -6,7 +6,7 @@ import 'package:legacy_keeper/screens/settings_screen.dart'; // Import Settings 
 import '../screens/ancestor_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+  const DashboardScreen({super.key});
 
   @override
   _DashboardScreenState createState() => _DashboardScreenState();

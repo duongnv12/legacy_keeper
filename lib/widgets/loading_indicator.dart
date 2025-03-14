@@ -4,7 +4,7 @@ import '../utils/constants.dart';
 class LoadingIndicator extends StatelessWidget {
   final String? message; // Tùy chọn hiển thị thông điệp khi loading
 
-  const LoadingIndicator({Key? key, this.message}) : super(key: key);
+  const LoadingIndicator({super.key, this.message});
 
   @override
   Widget build(BuildContext context) {

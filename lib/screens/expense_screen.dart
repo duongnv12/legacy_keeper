@@ -133,7 +133,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                             child: Row(
                               children: [
                                 _buildCell(member.name, flex: 3),
-                                _buildCell("${quota.toStringAsFixed(2)}", flex: 2),
+                                _buildCell(quota.toStringAsFixed(2), flex: 2),
                                 Expanded(
                                   flex: 2,
                                   child: CupertinoButton(

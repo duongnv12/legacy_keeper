@@ -7,11 +7,11 @@ class CustomPicker extends StatelessWidget {
   final ValueChanged<int> onSelected;
 
   const CustomPicker({
-    Key? key,
+    super.key,
     required this.options,
     required this.selectedItem,
     required this.onSelected,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

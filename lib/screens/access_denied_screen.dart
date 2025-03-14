@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 class AccessDeniedScreen extends StatelessWidget {
-  const AccessDeniedScreen({Key? key}) : super(key: key);
+  const AccessDeniedScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

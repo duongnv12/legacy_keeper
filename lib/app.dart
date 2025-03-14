@@ -13,7 +13,7 @@ import 'providers/financial_report_provider.dart';
 import 'providers/event_provider.dart';
 
 class LegacyKeeperApp extends StatelessWidget {
-  const LegacyKeeperApp({Key? key}) : super(key: key);
+  const LegacyKeeperApp({super.key});
 
   @override
   Widget build(BuildContext context) {

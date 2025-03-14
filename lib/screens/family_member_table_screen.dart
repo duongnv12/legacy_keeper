@@ -191,7 +191,7 @@ class FamilyMemberTableScreen extends StatelessWidget {
                         ),
                       ],
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             ],

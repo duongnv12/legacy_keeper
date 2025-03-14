@@ -7,11 +7,11 @@ class RoleBasedWidget extends StatelessWidget {
   final Widget child;
 
   const RoleBasedWidget({
-    Key? key,
+    super.key,
     required this.requiredRole,
     required this.currentUserRole,
     required this.child,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

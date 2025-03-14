@@ -4,7 +4,7 @@ import 'dashboard_screen.dart';
 import 'login_screen.dart';
 
 class SplashScreen extends StatelessWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   Future<void> _checkLoginStatus(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
