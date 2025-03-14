@@ -117,10 +117,8 @@ class _FamilyTreeGraphState extends State<FamilyTreeGraph> {
 
       if (newMember.parentId != null && newMember.parentId!.isNotEmpty) {
         final Node parentNode = graph.getNodeUsingKey(newMember.parentId! as ValueKey);
-        if (parentNode != null) {
-          graph.addEdge(parentNode, newNode);
-        }
-      }
+        graph.addEdge(parentNode, newNode);
+            }
     });
   }
 

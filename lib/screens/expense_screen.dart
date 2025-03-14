@@ -7,6 +7,8 @@ import '../providers/annual_income_provider.dart';
 import '../providers/family_member_provider.dart';
 import '../models/family_member_model.dart';
 import '../models/expense_transaction_model.dart';
+import '../utils/formatters.dart'; // Import tiện ích định dạng
+import '../widgets/custom_table_cell.dart'; // Import widget tái sử dụng
 
 class ExpenseScreen extends StatefulWidget {
   final String year;
@@ -57,7 +59,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       builder: (context) => CupertinoAlertDialog(
         title: const Text("Approved"),
         content: Text(
-            "${member.name} has been approved for ${expenseAmount.toStringAsFixed(2)} VND."),
+            "${member.name} has been approved for ${formatCurrency(expenseAmount)}."),
         actions: [
           CupertinoDialogAction(
             onPressed: () {
@@ -95,9 +97,21 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                     // Tiêu đề bảng
                     Row(
                       children: [
-                        _buildHeaderCell("Member Name", flex: 3),
-                        _buildHeaderCell("Expense Amount", flex: 2),
-                        _buildHeaderCell("Action", flex: 2),
+                        const CustomTableCell(
+                          text: "Member Name",
+                          flex: 3,
+                          isHeader: true,
+                        ),
+                        const CustomTableCell(
+                          text: "Expense Amount",
+                          flex: 2,
+                          isHeader: true,
+                        ),
+                        const CustomTableCell(
+                          text: "Action",
+                          flex: 2,
+                          isHeader: true,
+                        ),
                       ],
                     ),
                     const Divider(),
@@ -132,8 +146,14 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
                             child: Row(
                               children: [
-                                _buildCell(member.name, flex: 3),
-                                _buildCell(quota.toStringAsFixed(2), flex: 2),
+                                CustomTableCell(
+                                  text: member.name,
+                                  flex: 3,
+                                ),
+                                CustomTableCell(
+                                  text: formatCurrency(quota), // Định dạng tiền tệ
+                                  flex: 2,
+                                ),
                                 Expanded(
                                   flex: 2,
                                   child: CupertinoButton(
@@ -166,33 +186,6 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                   ],
                 ),
               ),
-      ),
-    );
-  }
-
-  // Hàm xây dựng ô tiêu đề (header cell)
-  Widget _buildHeaderCell(String text, {required int flex}) {
-    return Expanded(
-      flex: flex,
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
-        textAlign: TextAlign.center,
-      ),
-    );
-  }
-
-  // Hàm xây dựng ô dữ liệu (data cell)
-  Widget _buildCell(String text, {required int flex}) {
-    return Expanded(
-      flex: flex,
-      child: Text(
-        text,
-        style: const TextStyle(fontSize: 14),
-        textAlign: TextAlign.center,
       ),
     );
   }

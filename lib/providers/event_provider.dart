@@ -10,31 +10,54 @@ class EventProvider with ChangeNotifier {
   List<Event> get events => _events;
   bool get isLoading => _isLoading;
 
-  Future<void> fetchEvents() async {
+  // Lấy danh sách sự kiện không ẩn
+  Future<void> fetchActiveEvents() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      _service.getEvents().listen((fetchedEvents) {
-        _events = fetchedEvents;
-        notifyListeners();
-      });
+      _events = await _service.getActiveEvents();
     } catch (e) {
-      print("Error fetching events: $e");
+      print("Error fetching active events: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
+  // Thêm sự kiện mới
   Future<void> addEvent(Event event) async {
-    await _service.addEvent(event);
-    fetchEvents(); // Làm mới danh sách sự kiện
+    try {
+      await _service.addEvent(event);
+      _events.add(event);
+      notifyListeners();
+    } catch (e) {
+      print("Error adding event: $e");
+    }
   }
 
-  Future<void> deleteEvent(String id) async {
-    await _service.deleteEvent(id);
-    _events.removeWhere((event) => event.id == id);
-    notifyListeners(); // Cập nhật giao diện
+  // Cập nhật sự kiện
+  Future<void> updateEvent(String id, Event updatedEvent) async {
+    try {
+      await _service.updateEvent(id, updatedEvent);
+      final index = _events.indexWhere((e) => e.id == id);
+      if (index != -1) {
+        _events[index] = updatedEvent;
+        notifyListeners();
+      }
+    } catch (e) {
+      print("Error updating event: $e");
+    }
+  }
+
+  // Ẩn sự kiện
+  Future<void> hideEvent(String id) async {
+    try {
+      await _service.hideEvent(id);
+      _events.removeWhere((e) => e.id == id);
+      notifyListeners();
+    } catch (e) {
+      print("Error hiding event: $e");
+    }
   }
 }

@@ -1,8 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/event_model.dart';
 import '../providers/event_provider.dart';
+import '../models/event_model.dart';
+import '../widgets/custom_dialog.dart';
+import '../utils/formatters.dart';
+import 'add_event_screen.dart';
 
 class EventScreen extends StatefulWidget {
   const EventScreen({super.key});
@@ -12,121 +15,164 @@ class EventScreen extends StatefulWidget {
 }
 
 class _EventScreenState extends State<EventScreen> {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController locationController = TextEditingController();
-  final TextEditingController costController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
-  String selectedCategory = "Lễ Kỷ Niệm"; // Phân loại mặc định
-  DateTime selectedDate = DateTime.now();
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<EventProvider>(context, listen: false).fetchActiveEvents();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<EventProvider>(context);
+    final eventProvider = Provider.of<EventProvider>(context);
 
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
-        middle: Text("Manage Events"),
+        middle: Text("Event Management"),
       ),
       child: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            // Form nhập thông tin sự kiện
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  CupertinoTextField(
-                    controller: nameController,
-                    placeholder: "Enter event name",
-                  ),
-                  const SizedBox(height: 10),
-                  CupertinoTextField(
-                    controller: locationController,
-                    placeholder: "Enter location",
-                  ),
-                  const SizedBox(height: 10),
-                  CupertinoTextField(
-                    controller: costController,
-                    placeholder: "Enter cost (VNĐ)",
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 10),
-                  CupertinoTextField(
-                    controller: descriptionController,
-                    placeholder: "Enter description",
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 10),
-                  CupertinoButton(
-                    child: const Text("Select Date"),
-                    onPressed: () async {
-                      DateTime? pickedDate = await showCupertinoModalPopup(
-                        context: context,
-                        builder: (context) => SizedBox(
-                          height: 300,
-                          child: CupertinoDatePicker(
-                            mode: CupertinoDatePickerMode.dateAndTime,
-                            initialDateTime: selectedDate,
-                            onDateTimeChanged: (date) {
-                              setState(() {
-                                selectedDate = date;
-                              });
-                            },
-                          ),
-                        ),
-                      );
-                      if (pickedDate != null) {
-                        setState(() {
-                          selectedDate = pickedDate;
-                        });
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  CupertinoButton.filled(
-                    child: const Text("Add Event"),
-                    onPressed: () {
-                      final event = Event(
-                        id: '',
-                        name: nameController.text,
-                        category: selectedCategory,
-                        date: selectedDate,
-                        location: locationController.text,
-                        cost: int.parse(costController.text),
-                        description: descriptionController.text,
-                      );
-                      provider.addEvent(event);
-
-                      // Clear inputs
-                      nameController.clear();
-                      locationController.clear();
-                      costController.clear();
-                      descriptionController.clear();
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const Divider(),
             // Hiển thị danh sách sự kiện
-            Expanded(
-              child: provider.isLoading
-                  ? const Center(child: CupertinoActivityIndicator())
-                  : ListView.builder(
-                      itemCount: provider.events.length,
-                      itemBuilder: (context, index) {
-                        final event = provider.events[index];
-                        return ListTile(
-                          title: Text(event.name),
-                          subtitle: Text("Date: ${event.date}"),
-                          trailing: Text(event.category),
-                        );
-                      },
-                    ),
+            if (eventProvider.isLoading)
+              const Center(child: CupertinoActivityIndicator())
+            else if (eventProvider.events.isEmpty)
+              const Center(
+                child: Text(
+                  "No events available.\nPress the + button to add a new event.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: CupertinoColors.systemGrey,
+                  ),
+                ),
+              )
+            else
+              ListView.builder(
+                itemCount: eventProvider.events.length,
+                itemBuilder: (context, index) {
+                  final event = eventProvider.events[index];
+                  return _buildEventItem(context, eventProvider, event);
+                },
+              ),
+
+            // Nút "+" thêm sự kiện
+            Positioned(
+              bottom: 20,
+              right: 20,
+              child: CupertinoButton(
+                color: CupertinoColors.activeBlue,
+                padding: const EdgeInsets.all(16.0),
+                borderRadius: BorderRadius.circular(30),
+                child: const Icon(CupertinoIcons.add, color: CupertinoColors.white),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    CupertinoPageRoute(builder: (context) => const AddEventScreen()),
+                  );
+                },
+              ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildEventItem(BuildContext context, EventProvider provider, Event event) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      child: GestureDetector(
+        onTap: () => _showEventDetail(context, event),
+        child: Container(
+          decoration: BoxDecoration(
+            color: CupertinoColors.systemGrey6,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              children: [
+                // Avatar hoặc Icon
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: CupertinoColors.systemGrey4,
+                  child: const Icon(
+                    CupertinoIcons.calendar,
+                    color: CupertinoColors.white,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Thông tin sự kiện
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        event.title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Date: ${formatDate(event.date)}",
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: CupertinoColors.systemGrey,
+                        ),
+                      ),
+                      Text(
+                        "Category: ${event.category}",
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: CupertinoColors.systemGrey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Nút "Hide"
+                CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  color: CupertinoColors.destructiveRed,
+                  child: const Icon(CupertinoIcons.delete, color: CupertinoColors.white),
+                  onPressed: () => _hideEvent(provider, event),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _hideEvent(EventProvider eventProvider, Event event) async {
+    await eventProvider.hideEvent(event.id);
+
+    // Hiển thị thông báo sau khi sự kiện được ẩn
+    showCustomDialog(
+      context,
+      title: "Event Hidden",
+      content: "${event.title} has been successfully hidden.",
+      onConfirm: () => Navigator.pop(context),
+    );
+  }
+
+  void _showEventDetail(BuildContext context, Event event) {
+    showCustomDialog(
+      context,
+      title: event.title,
+      content: "Category: ${event.category}\n"
+          "Date: ${formatDate(event.date)}\n"
+          "Time: ${formatTime(event.time)}\n"
+          "Location: ${event.location}\n"
+          "Cost: ${formatCurrency(event.cost)}\n\n" 
+          "Description:\n${event.description}",
+      onConfirm: () => Navigator.pop(context),
     );
   }
 }

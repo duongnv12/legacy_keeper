@@ -25,7 +25,7 @@ class LegacyKeeperApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ExpenseProvider()),
         ChangeNotifierProvider(create: (_) => AnnualIncomeProvider()),
         ChangeNotifierProvider(create: (_) => FinancialReportProvider()),
-        ChangeNotifierProvider(create: (_) => EventProvider()..fetchEvents()),
+        ChangeNotifierProvider(create: (_) => EventProvider()..fetchActiveEvents()),
       ],
       child: CupertinoApp(
         title: 'Legacy Keeper',

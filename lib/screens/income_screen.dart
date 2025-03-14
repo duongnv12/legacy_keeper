@@ -5,6 +5,8 @@ import '../models/family_member_model.dart';
 import '../providers/annual_income_provider.dart';
 import '../providers/family_member_provider.dart';
 import '../models/annual_income_model.dart';
+import '../utils/formatters.dart'; // Import tiện ích định dạng
+import '../widgets/custom_table_cell.dart'; // Import widget tái sử dụng
 
 class IncomeScreen extends StatefulWidget {
   const IncomeScreen({super.key, required this.year});
@@ -105,10 +107,26 @@ class _IncomeScreenState extends State<IncomeScreen> {
                     // Tiêu đề bảng
                     Row(
                       children: [
-                        _buildHeaderCell("Member Name", flex: 3),
-                        _buildHeaderCell("Quota", flex: 2),
-                        _buildHeaderCell("Paid", flex: 2),
-                        _buildHeaderCell("Status", flex: 2),
+                        CustomTableCell(
+                          text: "Member Name",
+                          flex: 3,
+                          isHeader: true,
+                        ),
+                        CustomTableCell(
+                          text: "Quota",
+                          flex: 2,
+                          isHeader: true,
+                        ),
+                        CustomTableCell(
+                          text: "Paid",
+                          flex: 2,
+                          isHeader: true,
+                        ),
+                        CustomTableCell(
+                          text: "Status",
+                          flex: 2,
+                          isHeader: true,
+                        ),
                       ],
                     ),
                     const Divider(),
@@ -136,17 +154,20 @@ class _IncomeScreenState extends State<IncomeScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
                             child: Row(
                               children: [
-                                _buildCell(member.name, flex: 3),
-                                _buildCell(
-                                  income.annualQuota.toString(),
+                                CustomTableCell(
+                                  text: member.name,
+                                  flex: 3,
+                                ),
+                                CustomTableCell(
+                                  text: formatCurrency(income.annualQuota), // Định dạng tiền tệ
                                   flex: 2,
                                 ),
-                                _buildCell(
-                                  income.paidAmount.toString(),
+                                CustomTableCell(
+                                  text: formatCurrency(income.paidAmount), // Định dạng tiền tệ
                                   flex: 2,
                                 ),
-                                _buildCell(
-                                  income.status,
+                                CustomTableCell(
+                                  text: income.status,
                                   flex: 2,
                                   color: income.status == "Đã đóng"
                                       ? CupertinoColors.activeGreen
@@ -167,36 +188,6 @@ class _IncomeScreenState extends State<IncomeScreen> {
                   ],
                 ),
               ),
-      ),
-    );
-  }
-
-  // Hàm xây dựng ô tiêu đề (header cell)
-  Widget _buildHeaderCell(String text, {required int flex}) {
-    return Expanded(
-      flex: flex,
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
-        textAlign: TextAlign.center,
-      ),
-    );
-  }
-
-  // Hàm xây dựng ô dữ liệu (data cell)
-  Widget _buildCell(String text, {required int flex, Color? color}) {
-    return Expanded(
-      flex: flex,
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 14,
-          color: color ?? CupertinoColors.black,
-        ),
-        textAlign: TextAlign.center,
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
 import '../providers/financial_report_provider.dart';
+import '../utils/formatters.dart'; // Import tiện ích định dạng
 
 class FinancialReportScreen extends StatefulWidget {
   final String year;
@@ -47,38 +48,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
 
                     // Biểu đồ tròn
                     Expanded(
-                      child: PieChart(
-                        PieChartData(
-                          sections: [
-                            // Thu nhập
-                            PieChartSectionData(
-                              value: provider.totalIncome,
-                              color: CupertinoColors.activeGreen,
-                              title: "Income",
-                              radius: 70,
-                              titleStyle: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: CupertinoColors.white,
-                              ),
-                            ),
-                            // Chi tiêu
-                            PieChartSectionData(
-                              value: provider.totalExpense,
-                              color: CupertinoColors.destructiveRed,
-                              title: "Expense",
-                              radius: 70,
-                              titleStyle: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: CupertinoColors.white,
-                              ),
-                            ),
-                          ],
-                          centerSpaceRadius: 50,
-                          sectionsSpace: 2,
-                        ),
-                      ),
+                      child: _buildPieChart(provider),
                     ),
 
                     const SizedBox(height: 32),
@@ -89,28 +59,74 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      "Total Income: ${provider.totalIncome.toStringAsFixed(2)} VND",
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    Text(
-                      "Total Expense: ${provider.totalExpense.toStringAsFixed(2)} VND",
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    Text(
-                      "Net Balance: ${(provider.totalIncome - provider.totalExpense).toStringAsFixed(2)} VND",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: (provider.totalIncome - provider.totalExpense) >= 0
-                            ? CupertinoColors.activeGreen
-                            : CupertinoColors.destructiveRed,
-                      ),
-                    ),
+                    _buildSummary(provider),
                   ],
                 ),
               ),
       ),
+    );
+  }
+
+  Widget _buildPieChart(FinancialReportProvider provider) {
+    return PieChart(
+      PieChartData(
+        sections: [
+          // Thu nhập
+          PieChartSectionData(
+            value: provider.totalIncome,
+            color: CupertinoColors.activeGreen,
+            title: "Income",
+            radius: 70,
+            titleStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: CupertinoColors.white,
+            ),
+          ),
+          // Chi tiêu
+          PieChartSectionData(
+            value: provider.totalExpense,
+            color: CupertinoColors.destructiveRed,
+            title: "Expense",
+            radius: 70,
+            titleStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: CupertinoColors.white,
+            ),
+          ),
+        ],
+        centerSpaceRadius: 50,
+        sectionsSpace: 2,
+      ),
+    );
+  }
+
+  Widget _buildSummary(FinancialReportProvider provider) {
+    final netBalance = provider.totalIncome - provider.totalExpense;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Total Income: ${formatCurrency(provider.totalIncome)}",
+          style: const TextStyle(fontSize: 16),
+        ),
+        Text(
+          "Total Expense: ${formatCurrency(provider.totalExpense)}",
+          style: const TextStyle(fontSize: 16),
+        ),
+        Text(
+          "Net Balance: ${formatCurrency(netBalance)}",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: netBalance >= 0
+                ? CupertinoColors.activeGreen
+                : CupertinoColors.destructiveRed,
+          ),
+        ),
+      ],
     );
   }
 }

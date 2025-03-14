@@ -25,17 +25,17 @@ class SettingsScreen extends StatelessWidget {
       ),
       child: SafeArea(
         child: Column(
-          children: [
+            children: [
             // Hồ sơ cá nhân
             _buildSettingsOption(
               context,
               icon: CupertinoIcons.person,
               title: "Profile",
               onTap: () {
-                Navigator.push(
-                  context,
-                  CupertinoPageRoute(builder: (context) => const ProfileScreen()),
-                );
+              Navigator.push(
+                context,
+                CupertinoPageRoute(builder: (context) => const ProfileScreen()),
+              );
               },
             ),
             const Divider(),
@@ -46,10 +46,10 @@ class SettingsScreen extends StatelessWidget {
               icon: CupertinoIcons.group,
               title: "User Management",
               onTap: () {
-                Navigator.push(
-                  context,
-                  CupertinoPageRoute(builder: (context) => const UserManagementScreen()),
-                );
+              Navigator.push(
+                context,
+                CupertinoPageRoute(builder: (context) => const UserManagementScreen()),
+              );
               },
             ),
             const Divider(),
@@ -58,8 +58,11 @@ class SettingsScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: CupertinoButton.filled(
-                onPressed: () => _logout(context),
-                child: const Text("Log Out"),
+              onPressed: () async {
+                _logout(context);
+                Navigator.of(context).pushReplacementNamed('/login');
+              },
+              child: const Text("Log Out"),
               ),
             ),
           ],
