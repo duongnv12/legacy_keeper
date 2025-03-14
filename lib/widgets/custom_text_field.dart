@@ -11,7 +11,7 @@ class CustomTextField extends StatelessWidget {
   final int? maxLines;
 
   const CustomTextField({
-    Key? key,
+    super.key,
     required this.placeholder,
     required this.controller,
     this.obscureText = false,
@@ -20,7 +20,7 @@ class CustomTextField extends StatelessWidget {
     this.onChanged,
     this.showClearButton = true,
     this.maxLines,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
