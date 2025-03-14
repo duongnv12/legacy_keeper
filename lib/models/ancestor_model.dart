@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Ancestor {
-  final String id;
-  final String name;
-  final String birthDate;
-  final String? deathDate;
-  final String? notes;
-  final DateTime createdAt;
+  final String id; // Firestore document ID
+  final String name; // Tên của tổ tiên
+  final String birthDate; // Ngày sinh của tổ tiên
+  final String? deathDate; // Ngày mất (tùy chọn)
+  final String? notes; // Ghi chú (tùy chọn)
+  final DateTime createdAt; // Ngày tạo dữ liệu trong hệ thống
 
   Ancestor({
     required this.id,
@@ -17,6 +17,7 @@ class Ancestor {
     required this.createdAt,
   });
 
+  // Chuyển đổi từ Firestore thành model
   factory Ancestor.fromFirestore(Map<String, dynamic> data, String id) {
     return Ancestor(
       id: id,
@@ -24,17 +25,20 @@ class Ancestor {
       birthDate: data['birthDate'] ?? '',
       deathDate: data['deathDate'],
       notes: data['notes'],
-      createdAt: (data['createdAt'] as Timestamp).toDate(), // Convert Firestore Timestamp to DateTime
+      createdAt: (data['createdAt'] as Timestamp).toDate(),
     );
   }
 
+  // Chuyển đổi từ model sang Map để lưu vào Firestore
   Map<String, dynamic> toMap() {
     return {
       'name': name,
       'birthDate': birthDate,
       'deathDate': deathDate,
       'notes': notes,
-      'createdAt': Timestamp.fromDate(createdAt), // Convert DateTime to Firestore Timestamp
+      'createdAt': Timestamp.fromDate(createdAt),
     };
   }
+
+  static defaultAncestor() {}
 }

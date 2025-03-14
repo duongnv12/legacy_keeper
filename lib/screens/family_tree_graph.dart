@@ -1,39 +1,44 @@
 import 'package:flutter/cupertino.dart';
 import 'package:graphview/GraphView.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'add_family_member_screen.dart'; // To navigate to the "Add Member" screen
+import 'family_member_table_screen.dart'; // Import bảng thành viên
+import 'add_family_member_screen.dart';
+import '../models/family_member_model.dart';
 
 class FamilyTreeGraph extends StatefulWidget {
-  const FamilyTreeGraph({Key? key}) : super(key: key);
+  const FamilyTreeGraph({super.key});
 
   @override
   _FamilyTreeGraphState createState() => _FamilyTreeGraphState();
 }
 
 class _FamilyTreeGraphState extends State<FamilyTreeGraph> {
-  final Graph graph = Graph()..isTree = true; // Define the tree graph
+  final Graph graph = Graph()..isTree = true; // Tree graph structure
   final BuchheimWalkerConfiguration builder = BuchheimWalkerConfiguration();
-  bool isLoading = true; // Add a loading state
-  bool hasError = false; // Add an error state
+  bool isLoading = true;
+  bool hasError = false;
+  bool showTable = false; // Toggle to switch between Tree and Table views
+
+  final List<FamilyMember> familyMembers = []; // Danh sách thành viên từ Firestore
 
   @override
   void initState() {
     super.initState();
-    _configureTree(); // Configure the tree layout
-    _buildTree(); // Build the family tree
+    _configureTree(); // Cấu hình layout cây gia phả
+    _buildTree(); // Tạo cây gia phả ban đầu
   }
 
   void _configureTree() {
     builder
-      ..siblingSeparation = (100)
-      ..levelSeparation = (150)
-      ..subtreeSeparation = (150)
+      ..siblingSeparation = 100
+      ..levelSeparation = 150
+      ..subtreeSeparation = 150
       ..orientation = BuchheimWalkerConfiguration.ORIENTATION_TOP_BOTTOM;
   }
 
   Future<void> _buildTree() async {
     try {
-      print("Fetching ancestor...");
+      // Fetch ancestor
       final ancestorSnapshot = await FirebaseFirestore.instance
           .collection('ancestors')
           .orderBy('createdAt', descending: false)
@@ -44,31 +49,33 @@ class _FamilyTreeGraphState extends State<FamilyTreeGraph> {
         final ancestorData = ancestorSnapshot.docs.first.data();
         final ancestorId = ancestorSnapshot.docs.first.id;
 
-        print("Ancestor found: ${ancestorData['name']}");
-
-        // Create the ancestor's root node
         final Node rootNode = Node.Id(ancestorData['name']);
         graph.addNode(rootNode);
 
-        // Recursively build the subtree starting from the ancestor
+        // Add ancestor to the local member list
+        familyMembers.add(FamilyMember.fromFirestore(
+          ancestorData,
+          ancestorId,
+        ));
+
+        // Recursively build subtree
         await _buildSubTree(rootNode, ancestorId);
 
         setState(() {
-          isLoading = false; // Data loading complete
-          hasError = false; // No errors
+          isLoading = false;
+          hasError = false;
         });
       } else {
-        print("No ancestor found in Firestore.");
         setState(() {
           isLoading = false;
-          hasError = true; // Trigger error state
+          hasError = true;
         });
       }
     } catch (e) {
       print("Error building tree: $e");
       setState(() {
         isLoading = false;
-        hasError = true; // Trigger error state
+        hasError = true;
       });
     }
   }
@@ -82,11 +89,16 @@ class _FamilyTreeGraphState extends State<FamilyTreeGraph> {
 
       for (var child in childrenSnapshot.docs) {
         final childData = child.data();
-        print("Child found: ${childData['name']}");
 
         final Node childNode = Node.Id(childData['name']);
         graph.addNode(childNode);
-        graph.addEdge(parentNode, childNode); // Connect child to parent
+        graph.addEdge(parentNode, childNode);
+
+        // Add child to the local member list
+        familyMembers.add(FamilyMember.fromFirestore(
+          childData,
+          child.id,
+        ));
 
         // Recursively build subtree for each child
         await _buildSubTree(childNode, child.id);
@@ -96,42 +108,71 @@ class _FamilyTreeGraphState extends State<FamilyTreeGraph> {
     }
   }
 
+  void _addMember(FamilyMember newMember) {
+    setState(() {
+      familyMembers.add(newMember); // Add member to the list
+
+      final Node newNode = Node.Id(newMember.name);
+      graph.addNode(newNode);
+
+      if (newMember.parentId != null && newMember.parentId!.isNotEmpty) {
+        final Node? parentNode = graph.getNodeUsingKey(newMember.parentId! as ValueKey);
+        if (parentNode != null) {
+          graph.addEdge(parentNode, newNode);
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text("Family Tree"),
+      navigationBar: CupertinoNavigationBar(
+        middle: const Text("Family Tree"),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          child: Text(showTable ? "Tree View" : "Table View"),
+          onPressed: () {
+            setState(() {
+              showTable = !showTable; // Toggle between Tree and Table views
+            });
+          },
+        ),
       ),
       child: SafeArea(
         child: Stack(
           children: [
             if (isLoading)
               const Center(
-                child: CupertinoActivityIndicator(), // Show a loading spinner
+                child: CupertinoActivityIndicator(),
               )
             else if (hasError)
               const Center(
                 child: Text(
-                  "An error occurred while fetching data. Please try again.",
+                  "An error occurred while fetching data.\nPlease try again.",
                   textAlign: TextAlign.center,
                   style: TextStyle(color: CupertinoColors.systemRed),
                 ),
               )
             else
-              InteractiveViewer(
-                constrained: false,
-                boundaryMargin: const EdgeInsets.all(100),
-                minScale: 0.1,
-                maxScale: 1.5,
-                child: GraphView(
-                  graph: graph,
-                  algorithm: BuchheimWalkerAlgorithm(builder, TreeEdgeRenderer(builder)),
-                  builder: (Node node) {
-                    return nodeWidget(node.key!.value); // Display each node
-                  },
-                ),
-              ),
-            // Floating "add member" button
+              showTable
+                  ? FamilyMemberTableScreen(familyMembers: familyMembers) // Table view
+                  : InteractiveViewer(
+                      constrained: false,
+                      boundaryMargin: const EdgeInsets.all(100),
+                      minScale: 0.5,
+                      maxScale: 2.0,
+                      child: GraphView(
+                        graph: graph,
+                        algorithm: BuchheimWalkerAlgorithm(
+                          builder,
+                          TreeEdgeRenderer(builder),
+                        ),
+                        builder: (Node node) {
+                          return _nodeWidget(node.key!.value);
+                        },
+                      ),
+                    ),
             Positioned(
               bottom: 20,
               right: 20,
@@ -140,11 +181,17 @@ class _FamilyTreeGraphState extends State<FamilyTreeGraph> {
                 padding: const EdgeInsets.all(16.0),
                 borderRadius: BorderRadius.circular(30),
                 child: const Icon(CupertinoIcons.add, color: CupertinoColors.white),
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  final newMember = await Navigator.push(
                     context,
-                    CupertinoPageRoute(builder: (context) => const AddFamilyMemberScreen()),
+                    CupertinoPageRoute(
+                      builder: (context) => const AddFamilyMemberScreen(),
+                    ),
                   );
+
+                  if (newMember != null && newMember is FamilyMember) {
+                    _addMember(newMember); // Add member immediately to the tree
+                  }
                 },
               ),
             ),
@@ -154,16 +201,27 @@ class _FamilyTreeGraphState extends State<FamilyTreeGraph> {
     );
   }
 
-  Widget nodeWidget(String name) {
+  Widget _nodeWidget(String name) {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: CupertinoColors.systemGrey,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: CupertinoColors.systemGrey4.withOpacity(0.5),
+            blurRadius: 4.0,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Text(
         name,
-        style: const TextStyle(color: CupertinoColors.white),
+        style: const TextStyle(
+          color: CupertinoColors.white,
+          fontWeight: FontWeight.w500,
+        ),
+        textAlign: TextAlign.center,
       ),
     );
   }

@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import '../utils/constants.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -15,21 +14,13 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoButton(
-      color: AppColors.primaryColor,
-      disabledColor: AppColors.backgroundColor,
+    return CupertinoButton.filled(
       onPressed: isLoading ? null : onPressed,
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-      borderRadius: BorderRadius.circular(10),
       child: isLoading
-          ? const CupertinoActivityIndicator()
+          ? const CupertinoActivityIndicator(color: CupertinoColors.white)
           : Text(
               text,
-              style: const TextStyle(
-                color: CupertinoColors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 18, color: CupertinoColors.white),
             ),
     );
   }

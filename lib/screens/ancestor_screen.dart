@@ -1,10 +1,11 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/ancestor_provider.dart';
 import '../screens/add_ancestor_screen.dart';
 
 class AncestorScreen extends StatelessWidget {
-  const AncestorScreen({Key? key}) : super(key: key);
+  const AncestorScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +18,7 @@ class AncestorScreen extends StatelessWidget {
       child: SafeArea(
         child: Stack(
           children: [
-            // Hiển thị danh sách Ông Tổ
+            // Hiển thị danh sách ancestor
             if (ancestorProvider.isLoading)
               const Center(child: CupertinoActivityIndicator())
             else if (ancestorProvider.ancestors.isEmpty)
@@ -25,7 +26,10 @@ class AncestorScreen extends StatelessWidget {
                 child: Text(
                   "No ancestor data available.\nPress the + button to add a new ancestor.",
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: CupertinoColors.systemGrey,
+                  ),
                 ),
               )
             else
@@ -35,17 +39,70 @@ class AncestorScreen extends StatelessWidget {
                   final ancestor = ancestorProvider.ancestors[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                    child: CupertinoListTile(
-                      title: Text(ancestor.name),
-                      subtitle: Text(
-                        "Birth Year: ${ancestor.birthDate}\n"
-                        "Death Year: ${ancestor.deathDate ?? 'N/A'}",
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: CupertinoColors.systemGrey5,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: CupertinoColors.systemGrey2.withOpacity(0.5),
+                            blurRadius: 4.0,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Row(
+                          children: [
+                            // Avatar hoặc Icon
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundColor: CupertinoColors.systemGrey4,
+                              child: const Icon(
+                                CupertinoIcons.person_fill,
+                                color: CupertinoColors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            // Thông tin tổ tiên
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    ancestor.name,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    "Birth Year: ${ancestor.birthDate}",
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: CupertinoColors.systemGrey,
+                                    ),
+                                  ),
+                                  Text(
+                                    "Death Year: ${ancestor.deathDate ?? 'N/A'}",
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: CupertinoColors.systemGrey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );
                 },
               ),
-            // Nút dấu cộng để thêm Ông Tổ
+            // Nút "+" thêm ancestor
             Positioned(
               bottom: 20,
               right: 20,

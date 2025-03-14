@@ -1,34 +1,38 @@
 import 'package:flutter/foundation.dart';
-import '../models/expense_model.dart';
+import '../models/expense_transaction_model.dart';
 import '../services/expense_service.dart';
 
 class ExpenseProvider with ChangeNotifier {
   final ExpenseService _service = ExpenseService();
-  List<Expense> _expenses = [];
+  List<ExpenseTransaction> _expenses = [];
   bool _isLoading = false;
 
-  List<Expense> get expenses => _expenses;
+  List<ExpenseTransaction> get expenses => _expenses;
   bool get isLoading => _isLoading;
 
-  Future<void> fetchExpenses() async {
+  // Lấy danh sách khoản chi
+  Future<void> fetchAllExpenses() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      _service.getExpenses().listen((fetchedExpenses) {
-        _expenses = fetchedExpenses;
-        notifyListeners();
-      });
+      _expenses = await _service.getAllExpenses();
     } catch (e) {
       print("Error fetching expenses: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
-  Future<void> addExpense(Expense expense) async {
-    await _service.addExpense(expense);
-    fetchExpenses(); // Làm mới dữ liệu
+  // Thêm khoản chi và đồng bộ với Income
+  Future<void> addExpenseAndUpdateIncome(ExpenseTransaction expense) async {
+    try {
+      await _service.addExpense(expense);
+      _expenses.add(expense);
+      notifyListeners();
+    } catch (e) {
+      print("Error adding expense: $e");
+    }
   }
 }

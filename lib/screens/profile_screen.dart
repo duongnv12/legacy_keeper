@@ -1,16 +1,15 @@
 import 'package:flutter/cupertino.dart';
-import 'package:provider/provider.dart';
-import '../providers/user_provider.dart';
 import '../models/user_model.dart';
+import '../services/firebase_auth_service.dart';
 
-class PersonalInfoScreen extends StatefulWidget {
-  const PersonalInfoScreen({Key? key}) : super(key: key);
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
 
   @override
-  _PersonalInfoScreenState createState() => _PersonalInfoScreenState();
+  _ProfileScreenState createState() => _ProfileScreenState();
 }
 
-class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
+class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   bool isLoading = false;
@@ -21,18 +20,32 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     _loadUserInfo();
   }
 
-  void _loadUserInfo() {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final currentUser = userProvider.currentUser;
+  // Load thông tin người dùng từ Firebase Auth
+  void _loadUserInfo() async {
+    final authService = FirebaseAuthService();
+    final firebaseUser = authService.getCurrentUser();
 
-    if (currentUser != null) {
-      nameController.text = currentUser.name;
-      emailController.text = currentUser.email;
+    if (firebaseUser != null) {
+      setState(() {
+        emailController.text = firebaseUser.email ?? '';
+      });
+
+      // Lấy thông tin bổ sung từ Firestore
+      final userSnapshot = await authService.userCollection.doc(firebaseUser.uid).get();
+      if (userSnapshot.exists) {
+        final userData = userSnapshot.data() as Map<String, dynamic>;
+        final user = User.fromFirestore(userData, firebaseUser.uid);
+
+        setState(() {
+          nameController.text = user.name;
+        });
+      }
     }
   }
 
   Future<void> _updateUserInfo() async {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final authService = FirebaseAuthService();
+    final firebaseUser = authService.getCurrentUser();
 
     if (nameController.text.isEmpty || emailController.text.isEmpty) {
       _showErrorDialog("Please fill in all fields.");
@@ -43,21 +56,29 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       isLoading = true;
     });
 
-    final updatedUser = User(
-      id: userProvider.currentUser!.id, // Giữ nguyên ID
-      name: nameController.text,
-      email: emailController.text,
-      avatarUrl: userProvider.currentUser!.avatarUrl, // Giữ nguyên avatar
-      role: userProvider.currentUser!.role, // Giữ nguyên vai trò
-    );
+    try {
+      // Cập nhật thông tin người dùng trong Firestore
+      final updatedUser = User(
+        id: firebaseUser!.uid,
+        name: nameController.text,
+        email: emailController.text,
+        role: "Thành viên dòng họ", // Có thể dùng role mặc định hoặc giữ nguyên từ trước
+        isActive: true, // Giữ trạng thái Active
+      );
 
-    await userProvider.saveUser(updatedUser);
+      await authService.userCollection.doc(firebaseUser.uid).update(updatedUser.toMap());
 
-    setState(() {
-      isLoading = false;
-    });
+      setState(() {
+        isLoading = false;
+      });
 
-    _showSuccessDialog("Information updated successfully!");
+      _showSuccessDialog("Information updated successfully!");
+    } catch (e) {
+      print("Error updating user info: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   void _showErrorDialog(String message) {
@@ -85,9 +106,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         actions: [
           CupertinoDialogAction(
             child: const Text("OK"),
-            onPressed: () {
-              Navigator.pop(context); // Đóng thông báo
-            },
+            onPressed: () => Navigator.pop(context),
           ),
         ],
       ),
@@ -98,7 +117,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
-        middle: Text("Personal Information"),
+        middle: Text("Profile"),
       ),
       child: SafeArea(
         child: isLoading
@@ -119,11 +138,12 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                       placeholder: "Email",
                       keyboardType: TextInputType.emailAddress,
                       padding: const EdgeInsets.all(16.0),
+                      enabled: false, // Email không chỉnh sửa
                     ),
                     const SizedBox(height: 20),
                     CupertinoButton.filled(
-                      child: const Text("Update"),
                       onPressed: _updateUserInfo,
+                      child: const Text("Update Profile"),
                     ),
                   ],
                 ),

@@ -5,19 +5,22 @@ class AncestorService {
   final CollectionReference ancestorsCollection =
       FirebaseFirestore.instance.collection('ancestors');
 
-  // Hàm thêm Ông Tổ vào Firestore
+  // Hàm thêm ancestor mới vào Firestore
   Future<void> addAncestor(Ancestor ancestor) async {
     try {
       await ancestorsCollection.add(ancestor.toMap());
     } catch (e) {
       print("Error adding ancestor: $e");
-      rethrow;
+      rethrow; // Ném lại lỗi để xử lý phía trên
     }
   }
 
-  // Hàm lấy danh sách Ông Tổ từ Firestore
+  // Hàm lấy danh sách ancestor từ Firestore theo thời gian tạo
   Stream<List<Ancestor>> getAncestors() {
-    return ancestorsCollection.snapshots().map((snapshot) {
+    return ancestorsCollection
+        .orderBy('createdAt', descending: true) // Sắp xếp theo thời gian giảm dần
+        .snapshots()
+        .map((snapshot) {
       return snapshot.docs.map((doc) {
         return Ancestor.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
       }).toList();

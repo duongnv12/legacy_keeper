@@ -40,7 +40,7 @@ class FamilyMemberProvider with ChangeNotifier {
     }
   }
 
-  // Chỉnh sửa thành viên
+  // Cập nhật thông tin thành viên
   Future<void> updateFamilyMember(String id, Map<String, dynamic> updatedData) async {
     try {
       await _service.updateFamilyMember(id, updatedData);
@@ -55,14 +55,31 @@ class FamilyMemberProvider with ChangeNotifier {
     }
   }
 
-  // Xóa thành viên
-  Future<void> deleteFamilyMember(String id) async {
+  // Thay đổi trạng thái Active/Inactive
+  Future<void> setActiveState(String id, bool isActive) async {
     try {
-      await _service.deleteFamilyMember(id);
-      _familyMembers.removeWhere((member) => member.id == id);
-      notifyListeners(); // Cập nhật UI
+      await _service.setActiveState(id, isActive);
+      // Cập nhật local state
+      final index = _familyMembers.indexWhere((member) => member.id == id);
+      if (index != -1) {
+        _familyMembers[index] = FamilyMember(
+          id: _familyMembers[index].id,
+          name: _familyMembers[index].name,
+          birthDate: _familyMembers[index].birthDate,
+          deathDate: _familyMembers[index].deathDate,
+          gender: _familyMembers[index].gender,
+          address: _familyMembers[index].address,
+          phoneNumber: _familyMembers[index].phoneNumber,
+          email: _familyMembers[index].email,
+          parentId: _familyMembers[index].parentId,
+          spouseName: _familyMembers[index].spouseName,
+          createdAt: _familyMembers[index].createdAt,
+          isActive: isActive, // Thay đổi trạng thái
+        );
+        notifyListeners();
+      }
     } catch (e) {
-      print("Error deleting family member: $e");
+      print("Error updating active state: $e");
     }
   }
 }

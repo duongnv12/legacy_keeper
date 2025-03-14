@@ -5,22 +5,21 @@ class UserService {
   final CollectionReference userCollection =
       FirebaseFirestore.instance.collection('users');
 
-  // Lấy thông tin người dùng từ Firestore
+  // Lấy thông tin người dùng
   Future<User?> getUser(String userId) async {
     try {
       final snapshot = await userCollection.doc(userId).get();
       if (snapshot.exists) {
         return User.fromFirestore(snapshot.data() as Map<String, dynamic>, userId);
-      } else {
-        return null;
       }
+      return null;
     } catch (e) {
       print("Error fetching user: $e");
-      rethrow;
+      return null;
     }
   }
 
-  // Thêm người dùng mới vào Firestore
+  // Thêm người dùng mới
   Future<void> addUser(User user) async {
     try {
       await userCollection.doc(user.id).set(user.toMap());
@@ -36,6 +35,16 @@ class UserService {
       await userCollection.doc(user.id).update(user.toMap());
     } catch (e) {
       print("Error updating user: $e");
+      rethrow;
+    }
+  }
+
+  // Thay đổi trạng thái Active/Inactive
+  Future<void> setUserActiveState(String userId, bool isActive) async {
+    try {
+      await userCollection.doc(userId).update({'isActive': isActive});
+    } catch (e) {
+      print("Error updating user active state: $e");
       rethrow;
     }
   }

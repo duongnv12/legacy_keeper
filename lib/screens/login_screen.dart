@@ -1,7 +1,10 @@
 import 'package:flutter/cupertino.dart';
-import '../widgets/custom_text_field.dart';
-import '../widgets/custom_button.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 import '../services/firebase_auth_service.dart';
+import 'dashboard_screen.dart';
+import 'register_screen.dart';
+import 'access_denied_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -17,23 +20,37 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
 
   Future<void> _login() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
     setState(() {
       isLoading = true;
     });
 
-    final user = await _authService.signInWithEmailAndPassword(
-      emailController.text.trim(),
-      passwordController.text.trim(),
-    );
+    try {
+      final firebaseUser = await _authService.signInWithEmailAndPassword(email, password);
+      if (firebaseUser != null) {
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        await userProvider.fetchCurrentUser(firebaseUser.uid);
 
-    setState(() {
-      isLoading = false;
-    });
-
-    if (user != null) {
-      Navigator.pushReplacementNamed(context, '/dashboard');
-    } else {
-      _showErrorDialog("Invalid email or password.");
+        if (userProvider.currentUser!.isActive) {
+          Navigator.pushReplacement(
+            context,
+            CupertinoPageRoute(builder: (context) => const DashboardScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            CupertinoPageRoute(builder: (context) => const AccessDeniedScreen()),
+          );
+        }
+      }
+    } catch (e) {
+      _showErrorDialog(e.toString());
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -41,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: const Text("Error"),
+        title: const Text("Login Failed"),
         content: Text(message),
         actions: [
           CupertinoDialogAction(
@@ -65,34 +82,37 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CustomTextField(
-                placeholder: "Email",
+              CupertinoTextField(
                 controller: emailController,
+                placeholder: "Email",
+                keyboardType: TextInputType.emailAddress,
+                padding: const EdgeInsets.all(16.0),
               ),
-              const SizedBox(height: 20),
-              CustomTextField(
-                placeholder: "Password",
+              const SizedBox(height: 16),
+              CupertinoTextField(
                 controller: passwordController,
-                obscureText: true, // Fix: Added the missing parameter
+                placeholder: "Password",
+                obscureText: true,
+                padding: const EdgeInsets.all(16.0),
               ),
-              const SizedBox(height: 40),
-              CustomButton(
-                text: "Login",
-                onPressed: isLoading
-                    ? () {}
-                    : () {
-                        _login(); // Fix: Ensures correct VoidCallback type
-                      },
-                isLoading: isLoading,
+              const SizedBox(height: 32),
+              CupertinoButton.filled(
+                onPressed: isLoading ? null : _login,
+                child: isLoading
+                    ? const CupertinoActivityIndicator()
+                    : const Text("Login"),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               CupertinoButton(
                 child: const Text(
                   "Don't have an account? Register here!",
-                  style: TextStyle(color: CupertinoColors.activeBlue),
+                  style: TextStyle(fontSize: 16, color: CupertinoColors.activeBlue),
                 ),
                 onPressed: () {
-                  Navigator.pushNamed(context, '/register');
+                  Navigator.push(
+                    context,
+                    CupertinoPageRoute(builder: (context) => const RegisterScreen()),
+                  );
                 },
               ),
             ],

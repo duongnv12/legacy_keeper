@@ -3,13 +3,15 @@ import 'package:flutter/cupertino.dart';
 class CustomTextField extends StatelessWidget {
   final String placeholder;
   final TextEditingController controller;
-  final bool obscureText; // Add this parameter
+  final bool obscureText;
+  final TextInputType keyboardType;
 
   const CustomTextField({
     Key? key,
     required this.placeholder,
     required this.controller,
-    this.obscureText = false, // Default to false
+    this.obscureText = false,
+    this.keyboardType = TextInputType.text,
   }) : super(key: key);
 
   @override
@@ -17,17 +19,12 @@ class CustomTextField extends StatelessWidget {
     return CupertinoTextField(
       controller: controller,
       placeholder: placeholder,
-      obscureText: obscureText, // Use the obscureText parameter
-      obscuringCharacter: '•', // Customize the obscuring character
-      padding: const EdgeInsets.all(16),
-      style: const TextStyle(fontSize: 16),
+      obscureText: obscureText,
+      padding: const EdgeInsets.all(16.0),
+      keyboardType: keyboardType,
       decoration: BoxDecoration(
-        color: CupertinoColors.systemGrey6,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: CupertinoColors.systemGrey4,
-          width: 1.5,
-        ),
+        color: CupertinoColors.systemGrey5,
+        borderRadius: BorderRadius.circular(10),
       ),
     );
   }

@@ -5,7 +5,7 @@ import '../models/event_model.dart';
 import '../providers/event_provider.dart';
 
 class EventScreen extends StatefulWidget {
-  const EventScreen({Key? key}) : super(key: key);
+  const EventScreen({super.key});
 
   @override
   _EventScreenState createState() => _EventScreenState();

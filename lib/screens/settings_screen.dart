@@ -1,9 +1,21 @@
 import 'package:flutter/cupertino.dart';
-import 'personal_info_screen.dart';
-import 'user_management_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:legacy_keeper/screens/user_management_screen.dart';
+import 'profile_screen.dart';
+import '../services/firebase_auth_service.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
+
+  void _logout(BuildContext context) async {
+    final authService = FirebaseAuthService();
+
+    // Đăng xuất
+    await authService.signOut();
+
+    // Quay lại màn hình đăng nhập hoặc màn hình chính
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,19 +26,21 @@ class SettingsScreen extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            // Personal Information
+            // Hồ sơ cá nhân
             _buildSettingsOption(
               context,
               icon: CupertinoIcons.person,
-              title: "Personal Information",
+              title: "Profile",
               onTap: () {
                 Navigator.push(
                   context,
-                  CupertinoPageRoute(builder: (context) => const PersonalInfoScreen()),
+                  CupertinoPageRoute(builder: (context) => const ProfileScreen()),
                 );
               },
             ),
-            // User Management
+            const Divider(),
+
+            // Quản lý người dùng
             _buildSettingsOption(
               context,
               icon: CupertinoIcons.group,
@@ -38,13 +52,22 @@ class SettingsScreen extends StatelessWidget {
                 );
               },
             ),
+            const Divider(),
+
+            // Đăng xuất
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: CupertinoButton.filled(
+                onPressed: () => _logout(context),
+                child: const Text("Log Out"),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  // Helper method to build Cupertino-style settings options
   Widget _buildSettingsOption(BuildContext context,
       {required IconData icon, required String title, required VoidCallback onTap}) {
     return Padding(

@@ -26,7 +26,7 @@ class FamilyMemberService {
     }
   }
 
-  // Chỉnh sửa thông tin thành viên
+  // Cập nhật thông tin thành viên
   Future<void> updateFamilyMember(String id, Map<String, dynamic> updatedData) async {
     try {
       await familyMembersCollection.doc(id).update(updatedData);
@@ -36,12 +36,12 @@ class FamilyMemberService {
     }
   }
 
-  // Xóa thành viên
-  Future<void> deleteFamilyMember(String id) async {
+  // Thay đổi trạng thái Active/Inactive của thành viên
+  Future<void> setActiveState(String id, bool isActive) async {
     try {
-      await familyMembersCollection.doc(id).delete();
+      await familyMembersCollection.doc(id).update({'isActive': isActive});
     } catch (e) {
-      print("Error deleting family member: $e");
+      print("Error updating active state for family member: $e");
       rethrow;
     }
   }
