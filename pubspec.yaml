@@ -39,6 +39,7 @@ dependencies:
   cloud_firestore: ^5.6.5
   provider: ^6.1.2
   graphview: ^1.2.0
+  fl_chart: ^0.70.2
 
 dev_dependencies:
   flutter_test:
